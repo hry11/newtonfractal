@@ -1,6 +1,7 @@
 import math
 import pyglet
 import time
+from PIL import Image
 
 window = pyglet.window.Window(resizable=True)
 mouse = pyglet.window.mouse
@@ -184,7 +185,30 @@ p = plane(500, 500, 50)
 p1 = polynomial([[1,5],[1,2],[-1, 1],[1,0]])
 #p1 = polynomial([[1,2],[-7, 0]]) 
 r = [im(0, -1, (255,0,0)), im(0, 1, (0, 255, 0)), im(-1.3247, 0, (0,0,255)), im(0.66236, 0.56228, (255,255,0)), im(0.66236,- 0.56228, (0,255,255))]
-im = fractal(p1, r, (-10,-10), (10,10), 5)
+#im = fractal(p1, r, (-10,-10), (10,10), 5)
+
+def fractalim(img, px, roots):
+    img = Image.open(img)
+    pixels = img.load()
+    origin = (img.size[0]//2, img.size[1]//2)
+    w = img.size[0]/3
+    h = img.size[1]/3
+    for i in range(img.size[0]):
+        for j in range(img.size[1]):
+            print(f'{i}test{j}')
+            z = im((i-origin[0])/w,(j-origin[1])/h)
+            print(z)
+            end = newtonm(px, z, 10)
+            closest = roots[0]
+            for z2 in roots:
+                if (end-z2).mod() <= (end-closest).mod():
+                    closest = z2
+            color = closest.color
+            pixels[i, j] = color
+    img.save("pixel_grid3.png")
+
+fractalim('hopper.jpg', p1, r)
+
 
 @window.event
 def on_draw():
