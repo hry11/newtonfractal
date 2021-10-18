@@ -78,7 +78,11 @@ class im():
     a, b, m, t = 0, 0, 0, 0
     color = (0, 0, 0)
     def mod(self):
-        return math.sqrt(self.a**2 + self.b**2)
+        try:
+            mod = math.sqrt(self.a**2 + self.b**2)
+        except OverflowError:
+            return -1
+        return mod
     def arg(self):
         if self.a != 0:
             return math.atan(self.b / self.a)
@@ -169,16 +173,14 @@ def newtonm(px, seed, i=1):
         guess = guess - (px.image(guess)/dpx.image(guess))
     return guess
 
-def fractal(px, roots, botright, topleft, it):
-    image = [im(x, y) for x in range(botright[0], topleft[0]) for y in range(botright[1], topleft[1])]
-    for z in image:
-        end = newtonm(px, z, it)
-        closest = roots[0]
-        for z2 in roots:
-            if (end-z2).mod() <= (end-closest).mod():
-                closest = z2
-        z.color = closest.color
-    return image
+def mandelbrot(c, it):
+    z = 0
+    for i in range(it):
+        z = (z**2)+c
+    if z.mod() == -1 or z.mod() >10000:
+        return False
+    return True
+
 
 
 p = plane(500, 500, 50)
@@ -187,7 +189,7 @@ p1 = polynomial([[1,5],[1,2],[-1, 1],[1,0]])
 r = [im(0, -1, (255,0,0)), im(0, 1, (0, 255, 0)), im(-1.3247, 0, (0,0,255)), im(0.66236, 0.56228, (255,255,0)), im(0.66236,- 0.56228, (0,255,255))]
 #im = fractal(p1, r, (-10,-10), (10,10), 5)
 
-def fractalim(img, px, roots):
+def newtfractalim(img, px, roots):
     img = Image.open(img)
     pixels = img.load()
     origin = (img.size[0]//2, img.size[1]//2)
@@ -195,9 +197,8 @@ def fractalim(img, px, roots):
     h = img.size[1]/3
     for i in range(img.size[0]):
         for j in range(img.size[1]):
-            print(f'{i}test{j}')
+            print(i)
             z = im((i-origin[0])/w,(j-origin[1])/h)
-            print(z)
             end = newtonm(px, z, 10)
             closest = roots[0]
             for z2 in roots:
@@ -207,8 +208,25 @@ def fractalim(img, px, roots):
             pixels[i, j] = color
     img.save("pixel_grid3.png")
 
-fractalim('hopper.jpg', p1, r)
+#newtfractalim('hopper.jpg', p1, r)
 
+def mandelbrotim(img):
+    #boundaries are [-2, 1] on the x axis and [-1.5,1.5] on the y axis
+    img = Image.open(img)
+    pixels = img.load()
+    origin = (img.size[0]//1.5, img.size[1]//2)
+    w = img.size[0]/5
+    h = img.size[1]/5
+    for i in range(img.size[0]):
+        for j in range(img.size[1]):
+            print(i)
+            z = im((i-origin[0])/w,(j-origin[1])/h)
+            print(z)
+            if mandelbrot(z, 20) == True:
+                pixels[i, j] = (0,0,0)
+    img.save("mandelbrot.png")
+
+mandelbrotim('hopper.jpg')
 
 @window.event
 def on_draw():
@@ -227,4 +245,4 @@ def on_mouse_scroll(x, y, scroll_x, scroll_y):
     p.zoom(scroll_y, x, y)
 
 #pyglet.clock.schedule_interval(1, 1/30.0)
-pyglet.app.run()
+#pyglet.app.run()
